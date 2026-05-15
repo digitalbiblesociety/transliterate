@@ -1,3 +1,5 @@
+![transliterate](./assets/detector.svg)
+
 # Transliterate
 
 Pure-Go transliteration of 30+ writing systems to the Latin alphabet, built for Bible-translation workflows utilizing the [USFM format](https://ubsicap.github.io/usfm/about/index.html) and the [Aeneas Project](https://github.com/readbeyond/aeneas) like [Scripture App Builder](https://software.sil.org/scriptureappbuilder/). But usable for any text-processing pipeline.
