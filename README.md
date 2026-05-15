@@ -1,6 +1,6 @@
 ![transliterate](./assets/detector.svg)
 
-# Transliterate
+![transliterate](./assets/transliterate-logo.svg)
 
 Pure-Go transliteration of 30+ writing systems to the Latin alphabet, built for Bible-translation workflows utilizing the [USFM format](https://ubsicap.github.io/usfm/about/index.html) and the [Aeneas Project](https://github.com/readbeyond/aeneas) like [Scripture App Builder](https://software.sil.org/scriptureappbuilder/). But usable for any text-processing pipeline.
 
@@ -137,4 +137,8 @@ All other script tables are based on public international standards
 
 ## License
 
-[MIT](LICENSE) © Digital Bible Society.
+Freely available under the [MIT License](LICENSE)
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/digitalbiblesociety/transliterate/refs/heads/main/assets/dbs-logo-half.svg" />
+</p>
