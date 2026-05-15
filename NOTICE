@@ -1,0 +1,76 @@
+transliterate
+Copyright (c) 2026 Digital Bible Society
+
+Licensed under the MIT License (see LICENSE).
+This product bundles or derives from the following third-party data:
+
+--------------------------------------------------------------------------------
+ANETAC — Arabic Named Entity Transliteration and Classification
+--------------------------------------------------------------------------------
+Files:    internal/data/anetac/{train,dev,test}.{ar,en}
+Source:   https://github.com/HadjAmeur/ANETAC-Dataset
+License:  MIT
+
+The Arabic dictionary used by the default Transliterator is built from the
+train/dev/test splits of the ANETAC corpus (~80k Arabic named entities paired
+with their English transliterations).
+
+--------------------------------------------------------------------------------
+Unicode Unihan Database — Mandarin and Cantonese readings
+--------------------------------------------------------------------------------
+Files:    languages/hani/table.go, languages/yueh/table.go (generated)
+Source:   https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip
+License:  Unicode Terms of Use (https://www.unicode.org/copyright.html)
+
+The Hanyu Pinyin (Mandarin, tone-marked) and Jyutping (Cantonese, tone-digit)
+reading tables for the CJK Unified Ideographs block (U+4E00..U+9FFF) are
+generated from the kMandarin and kCantonese fields of the Unicode Unihan
+Database, respectively. One primary reading per character.
+
+The generator script is at internal/cmd/gen-unihan; it parses the
+Unihan_Readings.txt file from the latest Unicode release.
+
+--------------------------------------------------------------------------------
+Aksharamukha — Indic script codepoint mappings
+--------------------------------------------------------------------------------
+Files:    internal/brahmic/brahmi.go, internal/brahmic/sharada.go
+Source:   https://github.com/virtualvinodh/aksharamukha-python
+License:  MIT
+
+The per-codepoint romanization tables for Brahmi (U+11000..U+1107F) and
+Sharada (U+11180..U+111DF) are derived from Aksharamukha's MIT-licensed
+mappings, aligned with ISO 15919. No Aksharamukha source code is bundled —
+only the codepoint-to-Latin tables for these scripts.
+
+--------------------------------------------------------------------------------
+PyThaiNLP — Thai RTGS romanization algorithm (royin)
+--------------------------------------------------------------------------------
+Files:    languages/thai/thai.go
+Source:   https://github.com/PyThaiNLP/pythainlp
+License:  Apache License 2.0
+
+The Thai (RTGS-style) transliterator is a Go port of the rule-based
+`royin` algorithm from PyThaiNLP. It implements the Thai Royal Institute's
+Royal Thai General System of Transcription: pre-positioned vowel
+reordering, multi-rune vowel patterns, thanthakhat silencing with
+Sanskrit-cluster collapse, silent ห before sonorants, and tone-mark
+dropping. No PyThaiNLP source code is bundled — the algorithm is
+re-implemented in Go.
+
+--------------------------------------------------------------------------------
+Unicode character names
+--------------------------------------------------------------------------------
+Files:    languages/cans/table.go, languages/cher/table.go
+Source:   The Unicode Standard
+License:  Unicode Terms of Use (https://www.unicode.org/copyright.html)
+
+Romanization for Canadian Aboriginal Syllabics (U+1400..U+167F) and the
+Cherokee syllabary (U+13A0..U+13FF, U+AB70..U+ABBF) are derived from the
+syllable values embedded in Unicode character names.
+
+--------------------------------------------------------------------------------
+
+All other transliteration tables are hand-coded implementations of public
+international standards (ISO 9, ISO 9985, ISO 15919, ISO 233-3, BGN/PCGN,
+Revised Romanization of Korean, Hepburn, RTGS, SBL, Wylie) and are not
+derived from copyrighted third-party data.
