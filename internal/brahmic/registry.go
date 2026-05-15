@@ -21,6 +21,10 @@ var All = []*Script{
 	Batak,
 	Brahmi,
 	Sharada,
+	Modi,
+	Tirhuta,
+	Newa,
+	TaiTham,
 }
 
 // Detect scans s and returns the Script whose block contains the most

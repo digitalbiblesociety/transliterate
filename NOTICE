@@ -33,14 +33,21 @@ Unihan_Readings.txt file from the latest Unicode release.
 --------------------------------------------------------------------------------
 Aksharamukha — Indic script codepoint mappings
 --------------------------------------------------------------------------------
-Files:    internal/brahmic/brahmi.go, internal/brahmic/sharada.go
+Files:    internal/brahmic/{brahmi,sharada,modi,tirhuta,newa,taitham}.go
 Source:   https://github.com/virtualvinodh/aksharamukha-python
 License:  MIT
 
-The per-codepoint romanization tables for Brahmi (U+11000..U+1107F) and
-Sharada (U+11180..U+111DF) are derived from Aksharamukha's MIT-licensed
-mappings, aligned with ISO 15919. No Aksharamukha source code is bundled —
-only the codepoint-to-Latin tables for these scripts.
+The per-codepoint romanization tables for:
+  - Brahmi   (U+11000..U+1107F) — ancient Indian inscriptions
+  - Sharada  (U+11180..U+111DF) — historical Kashmiri Śaiva texts
+  - Modi    (U+11600..U+1165F) — historical Marathi
+  - Tirhuta (U+11480..U+114DF) — Maithili
+  - Newa    (U+11400..U+1147F) — Nepal Bhasa
+  - Tai Tham (U+1A20..U+1AAF)  — Northern Thai, Tai Lue, Khün, Lao Tham
+
+are derived from Aksharamukha's MIT-licensed mappings, aligned with
+ISO 15919. No Aksharamukha source code is bundled — only the
+codepoint-to-Latin tables for these scripts.
 
 --------------------------------------------------------------------------------
 PyThaiNLP — Thai RTGS romanization algorithm (royin)

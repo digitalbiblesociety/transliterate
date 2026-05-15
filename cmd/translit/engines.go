@@ -24,9 +24,12 @@ import (
 	"github.com/digitalbiblesociety/transliterate/languages/jpan"
 	"github.com/digitalbiblesociety/transliterate/languages/khmr"
 	"github.com/digitalbiblesociety/transliterate/languages/knda"
+	"github.com/digitalbiblesociety/transliterate/languages/lana"
 	"github.com/digitalbiblesociety/transliterate/languages/laoo"
 	"github.com/digitalbiblesociety/transliterate/languages/mlym"
+	"github.com/digitalbiblesociety/transliterate/languages/modi"
 	"github.com/digitalbiblesociety/transliterate/languages/mymr"
+	"github.com/digitalbiblesociety/transliterate/languages/newa"
 	"github.com/digitalbiblesociety/transliterate/languages/orya"
 	"github.com/digitalbiblesociety/transliterate/languages/shrd"
 	"github.com/digitalbiblesociety/transliterate/languages/sinh"
@@ -36,6 +39,7 @@ import (
 	"github.com/digitalbiblesociety/transliterate/languages/telu"
 	"github.com/digitalbiblesociety/transliterate/languages/thai"
 	"github.com/digitalbiblesociety/transliterate/languages/tibt"
+	"github.com/digitalbiblesociety/transliterate/languages/tirh"
 	"github.com/digitalbiblesociety/transliterate/languages/yueh"
 )
 
@@ -81,9 +85,13 @@ var engines = []engine{
 	{name: "Bugi", inBlock: inRange(bugi.BlockStart, bugi.BlockEnd), transliterate: bugi.Transliterate},
 	{name: "Batk", inBlock: inRange(batk.BlockStart, batk.BlockEnd), transliterate: batk.Transliterate},
 
-	// Aksharamukha-derived historical Indic scripts.
+	// Aksharamukha-derived scripts.
 	{name: "Brah", inBlock: inRange(brah.BlockStart, brah.BlockEnd), transliterate: brah.Transliterate},
 	{name: "Shrd", inBlock: inRange(shrd.BlockStart, shrd.BlockEnd), transliterate: shrd.Transliterate},
+	{name: "Modi", inBlock: inRange(modi.BlockStart, modi.BlockEnd), transliterate: modi.Transliterate},
+	{name: "Tirh", inBlock: inRange(tirh.BlockStart, tirh.BlockEnd), transliterate: tirh.Transliterate},
+	{name: "Newa", inBlock: inRange(newa.BlockStart, newa.BlockEnd), transliterate: newa.Transliterate},
+	{name: "Lana", inBlock: inRange(lana.BlockStart, lana.BlockEnd), transliterate: lana.Transliterate},
 
 	// Other Asian scripts.
 	{name: "Mymr", inBlock: inRange(mymr.BlockStart, mymr.BlockEnd), transliterate: mymr.Transliterate},

@@ -2,12 +2,12 @@
 
 Pure-Go transliteration of 30+ writing systems to the Latin alphabet, built for Bible-translation workflows utilizing the [USFM format](https://ubsicap.github.io/usfm/about/index.html) and the [Aeneas Project](https://github.com/readbeyond/aeneas) like [Scripture App Builder](https://software.sil.org/scriptureappbuilder/). But usable for any text-processing pipeline.
 
-To request an additional language, offer transliteration corrections/preferences, please create an issue.
+To request an additional language, offer transliteration corrections/preferences, please create an [issue](https://github.com/digitalbiblesociety/transliterate/issues).
 
 ## Supported scripts
 
 Packages are named by their [ISO 15924](https://www.unicode.org/iso15924/iso15924-codes.html)
-four-letter code (lowercased for Go). All live under `github.com/digitalbiblesociety/transliterate/languages/<code>`.
+four-letter code _lowercased for go_. All live under `github.com/digitalbiblesociety/transliterate/languages/<code>`.
 
 | Pkg    | Script                | Languages (sample)                                                    | Scheme               |
 | ------ | --------------------- | --------------------------------------------------------------------- | -------------------- |
@@ -34,9 +34,12 @@ four-letter code (lowercased for Go). All live under `github.com/digitalbiblesoc
 | `jpan` | Japanese (Hira+Kata)  | Japanese — kana only; kanji passthrough                               | Hepburn              |
 | `khmr` | Khmer                 | Khmer                                                                 | Simplified           |
 | `knda` | Kannada               | Kannada, Tulu, Konkani                                                | ISO 15919            |
+| `lana` | Tai Tham / Lanna      | Northern Thai, Tai Lue, Khün, Lao Tham                                | ISO 15919            |
 | `laoo` | Lao                   | Lao                                                                   | BGN/PCGN             |
 | `mlym` | Malayalam             | Malayalam                                                             | ISO 15919            |
+| `modi` | Modi                  | Marathi (historical)                                                  | ISO 15919            |
 | `mymr` | Myanmar / Burmese     | Burmese, Shan, Mon                                                    | BGN/PCGN             |
+| `newa` | Newa / Prachalit      | Nepal Bhasa (Newari)                                                  | ISO 15919            |
 | `orya` | Oriya                 | Odia                                                                  | ISO 15919            |
 | `shrd` | Sharada               | Kashmiri Śaiva, Sanskrit (historical)                                 | ISO 15919            |
 | `sinh` | Sinhala               | Sinhala                                                               | ISO 15919            |
@@ -46,6 +49,7 @@ four-letter code (lowercased for Go). All live under `github.com/digitalbiblesoc
 | `telu` | Telugu                | Telugu                                                                | ISO 15919            |
 | `thai` | Thai                  | Thai                                                                  | RTGS (PyThaiNLP port)|
 | `tibt` | Tibetan               | Tibetan                                                               | Wylie                |
+| `tirh` | Tirhuta               | Maithili                                                              | ISO 15919            |
 | `yueh` | Han (Cantonese)       | Cantonese / Yue Chinese                                               | Jyutping (tone digit)|
 
 ## Install
@@ -121,8 +125,8 @@ Third-party data and algorithms in this repo:
   Cherokee tables.
 - **PyThaiNLP** (Apache 2.0) — algorithmic basis for the Thai RTGS
   port; no source code is bundled.
-- **Aksharamukha** (MIT) — codepoint romanization tables for the
-  historical Brahmi and Sharada scripts.
+- **Aksharamukha** (MIT) — codepoint romanization tables for Brahmi,
+  Sharada, Modi, Tirhuta, Newa, and Tai Tham.
 
 Full attribution in [NOTICE](NOTICE).
 
