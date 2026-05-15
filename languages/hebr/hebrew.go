@@ -1,6 +1,6 @@
-// Package hebrew provides SBL-style transliteration of Hebrew text to
-// the Latin alphabet. The scheme is the de facto standard for Bible
-// studies and academic OT/Tanakh work. Niqqud (vowel pointing) is
+// Package hebrew provides SBL Academic-style transliteration of Hebrew
+// text to the Latin alphabet. The scheme is the de facto standard for
+// Bible studies and academic OT/Tanakh work. Niqqud (vowel pointing) is
 // consumed when present; the engine works on unpointed text too,
 // producing consonant-only output for those passages.
 //
@@ -8,93 +8,123 @@
 // Masoretic Text) are dropped — they carry recitation guidance, not
 // pronunciation. Niqqud is normalized via Unicode NFD.
 //
-// Known simplifications (acceptable for v1):
-//   - Kamatz (ָ) always renders as "ā" (no kamatz-katan / "o" disambiguation).
-//   - Dagesh is dropped (consonants not doubled, BGD KPT not toggled).
-//   - Vav-shuruq (וּ) renders as "wu" not "ū".
-//   - Yod-with-hiriq (יִ) renders as "yi" not "î".
+// Implemented SBL rules:
+//   - Mater lectionis ligatures: hiriq-yod → î, tsere-yod → ê,
+//     segol-yod → ê, holam-vav → ô, vav-with-dagesh (shuruq) → û,
+//     word-final qamatz-he → â.
+//   - Furtive patah: word-final patah before ḥ / ʿ / ה (with mappiq)
+//     is emitted before the consonant, e.g. נֹחַ → nōaḥ.
+//   - Dagesh chazaq (forte) doubles the consonant when preceded by a
+//     vowel (e.g. הִנֵּה → hinnê, מַגָּל → maggāl). At word-end on a
+//     consonant with silent shewa the doubling is not realised, per
+//     standard SBL practice.
+//   - Vocal vs silent shewa via a positional heuristic: initial → vocal;
+//     after a long vowel or hataf → vocal; on a consonant with dagesh
+//     forte → vocal; otherwise → silent.
+//   - Qamatz-katan: U+05C7 always renders "o"; a regular qamatz is also
+//     read as qatan when (a) the next cluster in the word has hataf-
+//     qamatz, or (b) the word is a closed monosyllable joined by maqaf
+//     (e.g. כָּל־ → kol-).
+//   - Divine name (יהוה) is rendered "yhwh" regardless of pointing.
+//
+// Known simplifications:
+//   - No accent-driven long-hiriq / long-qubuts macron (we emit "dāwid"
+//     where some SBL guides give "dāwīd").
+//   - No BGDKPT spirantization marking (SBL Academic default does not
+//     mark it; the sblAcademicSpirantization variant which underlines
+//     ḇ ḡ ḏ ḵ p̱ ṯ is not exposed).
+//   - Sof passuq renders ":" rather than the SBL-default empty string,
+//     because verse-end markers are useful in Bible-alignment pipelines.
 package hebr
 
 import (
 	"strings"
-	"unicode"
 
 	"golang.org/x/text/unicode/norm"
 )
 
+// Hebrew block range.
 const (
 	BlockStart rune = 0x0590
 	BlockEnd   rune = 0x05FF
-	ShinDot    rune = 0x05C1 // ◌ׁ — right-side dot, marks shin
-	SinDot     rune = 0x05C2 // ◌ׂ — left-side dot, marks sin
-	Shin       rune = 0x05E9 // ש
 )
 
-// Transliterate returns the SBL-style romanization of s. The input is
-// NFD-decomposed so that pointed glyphs split into base consonant +
+// Niqqud (vowel-point combining marks).
+const (
+	Sheva       rune = 0x05B0
+	HatafSegol  rune = 0x05B1
+	HatafPatah  rune = 0x05B2
+	HatafQamats rune = 0x05B3
+	Hiriq       rune = 0x05B4
+	Tsere       rune = 0x05B5
+	Segol       rune = 0x05B6
+	Patah       rune = 0x05B7
+	Qamats      rune = 0x05B8
+	Holam       rune = 0x05B9
+	HolamHaser  rune = 0x05BA
+	Qubuts      rune = 0x05BB
+	QamatsQatan rune = 0x05C7
+)
+
+// Non-vowel combining marks and structural punctuation.
+const (
+	Dagesh   rune = 0x05BC
+	Meteg    rune = 0x05BD
+	Maqaf    rune = 0x05BE
+	Rafe     rune = 0x05BF
+	Paseq    rune = 0x05C0
+	ShinDot  rune = 0x05C1
+	SinDot   rune = 0x05C2
+	SofPasuq rune = 0x05C3
+	NunHafu  rune = 0x05C6
+	Geresh   rune = 0x05F3
+	Gershyim rune = 0x05F4
+)
+
+// Hebrew letters.
+const (
+	Alef       rune = 0x05D0
+	Bet        rune = 0x05D1
+	Gimel      rune = 0x05D2
+	Dalet      rune = 0x05D3
+	He         rune = 0x05D4
+	Vav        rune = 0x05D5
+	Zayin      rune = 0x05D6
+	Het        rune = 0x05D7
+	Tet        rune = 0x05D8
+	Yod        rune = 0x05D9
+	FinalKaf   rune = 0x05DA
+	Kaf        rune = 0x05DB
+	Lamed      rune = 0x05DC
+	FinalMem   rune = 0x05DD
+	Mem        rune = 0x05DE
+	FinalNun   rune = 0x05DF
+	Nun        rune = 0x05E0
+	Samekh     rune = 0x05E1
+	Ayin       rune = 0x05E2
+	FinalPe    rune = 0x05E3
+	Pe         rune = 0x05E4
+	FinalTsadi rune = 0x05E5
+	Tsadi      rune = 0x05E6
+	Qof        rune = 0x05E7
+	Resh       rune = 0x05E8
+	Shin       rune = 0x05E9
+	Tav        rune = 0x05EA
+)
+
+// Transliterate returns the SBL Academic romanization of s. The input
+// is NFD-decomposed so that pointed glyphs split into base consonant +
 // combining marks for uniform handling.
 func Transliterate(s string) string {
 	if s == "" {
 		return s
 	}
 	rs := []rune(norm.NFD.String(s))
+	cs := parseClusters(rs)
 	var b strings.Builder
 	b.Grow(len(s) * 2)
-
-	for i := 0; i < len(rs); i++ {
-		r := rs[i]
-		// Consonants.
-		if v, ok := consonants[r]; ok {
-			// Shin needs the dot to disambiguate š vs ś.
-			if r == Shin {
-				v = shinSinFromMarks(rs, i)
-			}
-			b.WriteString(v)
-			// Append any niqqud marks that follow.
-			for j := i + 1; j < len(rs) && unicode.Is(unicode.Mn, rs[j]); j++ {
-				if v, ok := niqqud[rs[j]]; ok {
-					b.WriteString(v)
-				}
-				// Cantillation marks and shin/sin dots are silently
-				// consumed without emitting anything.
-			}
-			// Skip over the combining-mark cluster.
-			for i+1 < len(rs) && unicode.Is(unicode.Mn, rs[i+1]) {
-				i++
-			}
-			continue
-		}
-		// Punctuation.
-		if v, ok := punctuation[r]; ok {
-			b.WriteString(v)
-			continue
-		}
-		// Stray combining marks (no base in our consonant table): drop.
-		if unicode.Is(unicode.Mn, r) {
-			continue
-		}
-		// In-block but unmapped: drop.
-		if r >= BlockStart && r <= BlockEnd {
-			continue
-		}
-		b.WriteRune(r)
-	}
+	emit(cs, &b)
 	return b.String()
-}
-
-// shinSinFromMarks inspects the combining marks immediately after a
-// shin (rs[i] == 0x05E9) and returns "š" if right-side dot follows, "ś"
-// if left-side dot follows, "š" otherwise (most-common case).
-func shinSinFromMarks(rs []rune, i int) string {
-	for j := i + 1; j < len(rs) && unicode.Is(unicode.Mn, rs[j]); j++ {
-		switch rs[j] {
-		case ShinDot:
-			return "š"
-		case SinDot:
-			return "ś"
-		}
-	}
-	return "š"
 }
 
 // Contains reports whether s has at least one Hebrew-block rune.
@@ -107,64 +137,81 @@ func Contains(s string) bool {
 	return false
 }
 
-// consonants maps Hebrew letters (including final forms) to their SBL
-// Latin equivalent.
-var consonants = map[rune]string{
-	0x05D0: "ʾ", // א alef
-	0x05D1: "b", // ב bet
-	0x05D2: "g", // ג gimel
-	0x05D3: "d", // ד dalet
-	0x05D4: "h", // ה he
-	0x05D5: "w", // ו vav
-	0x05D6: "z", // ז zayin
-	0x05D7: "ḥ", // ח chet
-	0x05D8: "ṭ", // ט tet
-	0x05D9: "y", // י yod
-	0x05DA: "k", // ך final kaf
-	0x05DB: "k", // כ kaf
-	0x05DC: "l", // ל lamed
-	0x05DD: "m", // ם final mem
-	0x05DE: "m", // מ mem
-	0x05DF: "n", // ן final nun
-	0x05E0: "n", // נ nun
-	0x05E1: "s", // ס samekh
-	0x05E2: "ʿ", // ע ayin
-	0x05E3: "p", // ף final pe
-	0x05E4: "p", // פ pe
-	0x05E5: "ṣ", // ץ final tsadi
-	0x05E6: "ṣ", // צ tsadi
-	0x05E7: "q", // ק qof
-	0x05E8: "r", // ר resh
-	0x05E9: "š", // ש shin (placeholder; shin/sin chosen by mark)
-	0x05EA: "t", // ת tav
+// isHebrewLetter reports whether r is one of the 27 Hebrew base letters
+// (including the five final forms).
+func isHebrewLetter(r rune) bool {
+	return r >= Alef && r <= Tav
 }
 
-// niqqud maps vowel-point combining marks to Latin vowels.
-var niqqud = map[rune]string{
-	0x05B0: "ə", // ְ shewa (silent / vocal — we always render)
-	0x05B1: "ě", // ֱ hataf segol
-	0x05B2: "ă", // ֲ hataf patah
-	0x05B3: "ŏ", // ֳ hataf qamatz
-	0x05B4: "i", // ִ hiriq
-	0x05B5: "ē", // ֵ tsere
-	0x05B6: "e", // ֶ segol
-	0x05B7: "a", // ַ patah
-	0x05B8: "ā", // ָ qamatz
-	0x05B9: "ō", // ֹ holam
-	0x05BA: "ō", // ֺ holam haser for vav
-	0x05BB: "u", // ֻ qubuts
-	// 0x05BC: dagesh — dropped (would double consonant or alter b/g/d/k/p/t).
-	// 0x05BD: meteg — dropped (cantillation/rhythm mark).
-	// 0x05BE: maqaf — handled in punctuation.
-	// 0x05BF: rafe — dropped.
+// isVowelMark reports whether r is a niqqud combining mark (or the
+// dedicated qamats-qatan U+05C7).
+func isVowelMark(r rune) bool {
+	switch r {
+	case Sheva, HatafSegol, HatafPatah, HatafQamats,
+		Hiriq, Tsere, Segol, Patah, Qamats,
+		Holam, HolamHaser, Qubuts, QamatsQatan:
+		return true
+	}
+	return false
 }
 
-// punctuation covers separators and verse markers.
-var punctuation = map[rune]string{
-	0x05BE: "-", // ־ maqaf (hyphen joiner)
-	0x05C0: "|", // ׀ paseq
-	0x05C3: ":", // ׃ sof passuq (end-of-verse)
-	0x05C6: "",  // ׆ nun hafukha (drop)
-	0x05F3: "'", // ׳ geresh
-	0x05F4: `"`, // ״ gershayim
+// consonantLatin maps each Hebrew letter to its SBL Academic Latin
+// equivalent. Shin is resolved separately via the shin/sin dot.
+var consonantLatin = map[rune]string{
+	Alef:       "ʾ",
+	Bet:        "b",
+	Gimel:      "g",
+	Dalet:      "d",
+	He:         "h",
+	Vav:        "w",
+	Zayin:      "z",
+	Het:        "ḥ",
+	Tet:        "ṭ",
+	Yod:        "y",
+	FinalKaf:   "k",
+	Kaf:        "k",
+	Lamed:      "l",
+	FinalMem:   "m",
+	Mem:        "m",
+	FinalNun:   "n",
+	Nun:        "n",
+	Samekh:     "s",
+	Ayin:       "ʿ",
+	FinalPe:    "p",
+	Pe:         "p",
+	FinalTsadi: "ṣ",
+	Tsadi:      "ṣ",
+	Qof:        "q",
+	Resh:       "r",
+	Shin:       "š", // placeholder; resolved from shin/sin dot
+	Tav:        "t",
+}
+
+// vowelLatin maps niqqud to SBL Academic vowels. Qamats may later be
+// rewritten as "o" by the qamats-qatan rule; sheva may be elided by the
+// silent-shewa rule.
+var vowelLatin = map[rune]string{
+	Sheva:       "ə",
+	HatafSegol:  "ĕ",
+	HatafPatah:  "ă",
+	HatafQamats: "ŏ",
+	Hiriq:       "i",
+	Tsere:       "ē",
+	Segol:       "e",
+	Patah:       "a",
+	Qamats:      "ā",
+	Holam:       "ō",
+	HolamHaser:  "ō",
+	Qubuts:      "u",
+	QamatsQatan: "o",
+}
+
+// punctuationLatin covers in-block separators and verse markers.
+var punctuationLatin = map[rune]string{
+	Maqaf:    "-",
+	Paseq:    "",
+	SofPasuq: ":",
+	NunHafu:  "",
+	Geresh:   "'",
+	Gershyim: `"`,
 }
