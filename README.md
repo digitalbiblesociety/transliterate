@@ -50,7 +50,7 @@ four-letter code _lowercased for go_. All live under `github.com/digitalbiblesoc
 | `taml` | Tamil                 | Tamil                                                                 | ISO 15919            |
 | `telu` | Telugu                | Telugu                                                                | ISO 15919            |
 | `thai` | Thai                  | Thai                                                                  | RTGS (PyThaiNLP port)|
-| `tibt` | Tibetan               | Tibetan                                                               | Wylie                |
+| `tibt` | Tibetan               | Tibetan                                                               | Wylie + THL Phonetic |
 | `tirh` | Tirhuta               | Maithili                                                              | ISO 15919            |
 | `yueh` | Han (Cantonese)       | Cantonese / Yue Chinese                                               | Jyutping (tone digit)|
 
@@ -95,16 +95,23 @@ $ translit -script Hebr "בְּרֵאשִׁית"
 bərēʾšiyt
 
 # For vocalized Arabic, use the tashkeel-aware engine:
-$ translit -tashkeel "يَعْقُوبَ"
+$ translit -mode tashkeel "يَعْقُوبَ"
 yaequb
 
 # Chinese auto-detects as Mandarin (tonal); read as Cantonese explicitly:
 $ translit "你好"
 nǐ hǎo
-$ translit -notones "你好"
+$ translit -mode atonal "你好"
 ni hao
 $ translit -script Yueh "你好"
 nei5 hou2
+
+# Tibetan defaults to Wylie; -mode phonetic switches to THL Simplified
+# Phonetic (approximate Lhasa pronunciation, ideal for forced alignment):
+$ translit "བཀྲ་ཤིས་བདེ་ལེགས"
+bkra shis bde legs
+$ translit -mode phonetic "བཀྲ་ཤིས་བདེ་ལེགས"
+tra shi de lek
 
 # USFM directory walker (auto-detects per directory):
 $ translit usfm -in ./source-usfm -out ./latin-usfm -jobs 8

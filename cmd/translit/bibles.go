@@ -10,7 +10,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/digitalbiblesociety/transliterate/script"
 )
+
 
 var biblesHelp = `translit bibles — walk a tree of <bible>/usfm/ directories.
 
@@ -24,6 +27,7 @@ Flags:
   -root <dir>      Root containing <bible>/usfm/ subdirs (required).
   -force           Overwrite existing output dirs (default: skip).
   -out-name <name> Sibling output dir name (default: usfm-transliterate).
+  -mode <name>     Alternate transliteration mode (see 'translit help' for list).
   -jobs N          Bibles to process in parallel (default: NumCPU).
 `
 
@@ -41,13 +45,13 @@ func runBibles(args []string) {
 	root := fs.String("root", "", "root containing <bible>/usfm/ subdirs")
 	force := fs.Bool("force", false, "overwrite existing output dirs")
 	outName := fs.String("out-name", "usfm-transliterate", "sibling output dir name")
-	tashkeel := fs.Bool("tashkeel", false, "for Arab-detected Bibles, use the tashkeel-aware engine")
-	notones := fs.Bool("notones", false, "for Hani-detected Bibles, strip tone marks")
+	mf := registerModeFlags(fs)
 	jobs := fs.Int("jobs", runtime.NumCPU(), "Bibles to process in parallel")
 	fs.Usage = func() { fmt.Fprint(os.Stderr, biblesHelp) }
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)
 	}
+	mf.validate()
 
 	if *root == "" {
 		fmt.Fprint(os.Stderr, biblesHelp)
@@ -83,7 +87,7 @@ func runBibles(args []string) {
 				}
 			}
 
-			r := processBible(inDir, outDir, *tashkeel, *notones)
+			r := processBible(inDir, outDir, mf.effective())
 			r.bible = bible
 			if r.script == "" {
 				skipped.Add(1)
@@ -146,7 +150,7 @@ func findBibles(root string) ([]string, error) {
 	return out, nil
 }
 
-func processBible(inDir, outDir string, tashkeel, notones bool) bibleResult {
+func processBible(inDir, outDir, mode string) bibleResult {
 	start := time.Now()
 	var r bibleResult
 
@@ -159,15 +163,9 @@ func processBible(inDir, outDir string, tashkeel, notones bool) bibleResult {
 	if eng == nil {
 		return r
 	}
-	r.script = eng.name
+	r.script = eng.Name
 
-	transFn := eng.transliterate
-	if tashkeel && eng.tashkeel != nil {
-		transFn = eng.tashkeel
-	}
-	if notones && eng.atonal != nil {
-		transFn = eng.atonal
-	}
+	transFn := script.ResolveMode(eng, mode)
 
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		r.errs++

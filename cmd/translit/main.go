@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/digitalbiblesociety/transliterate/script"
 )
 
 func main() {
@@ -34,7 +36,7 @@ func main() {
 
 func printHelp(args []string) {
 	if len(args) == 0 {
-		fmt.Fprint(os.Stdout, rootHelp)
+		fmt.Fprint(os.Stdout, rootHelp())
 		return
 	}
 	switch args[0] {
@@ -43,15 +45,19 @@ func printHelp(args []string) {
 	case "bibles":
 		fmt.Fprint(os.Stdout, biblesHelp)
 	case "text":
-		fmt.Fprint(os.Stdout, textHelp)
+		fmt.Fprint(os.Stdout, textHelp())
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand %q\n", args[0])
-		fmt.Fprint(os.Stderr, rootHelp)
+		fmt.Fprint(os.Stderr, rootHelp())
 		os.Exit(2)
 	}
 }
 
-var rootHelp = `translit — transliterate text from 30+ writing systems to Latin.
+// rootHelp / textHelp pull from the mode registry, which is populated
+// by the script package's init() — must be evaluated at call time, not
+// as a top-level var.
+func rootHelp() string {
+	return `translit — transliterate text from 30+ writing systems to Latin.
 
 Usage:
   translit [flags] [words...]       one-shot text mode (auto-detect)
@@ -60,12 +66,15 @@ Usage:
   translit help [subcommand]
 
 Scripts are identified by ISO 15924 codes (case-insensitive):
-  ` + strings.Join(engineNames(), ", ") + `.
+  ` + strings.Join(script.Names(), ", ") + `.
 
+` + modesHelp() + `
 Run 'translit help <subcommand>' for subcommand-specific flags.
 `
+}
 
-var textHelp = `translit (text mode) — transliterate words or stdin.
+func textHelp() string {
+	return `translit (text mode) — transliterate words or stdin.
 
 Usage:
   translit [flags] [words...]
@@ -73,12 +82,17 @@ Usage:
 
 Flags:
   -script <code>   Force a specific script by ISO 15924 code (case-insensitive).
-                   One of: ` + strings.Join(engineNames(), ", ") + `.
-  -tashkeel        For Arab input, use the tashkeel-aware engine instead of
-                   the default ANETAC dictionary lookup.
-  -notones         For Hani (Mandarin) or Yueh (Cantonese) input, strip tone
-                   marks (Mandarin diacritics) or tone digits (Jyutping 1-6).
+                   One of: ` + strings.Join(script.Names(), ", ") + `.
+  -mode <name>     Alternate transliteration mode. No-op if the detected
+                   script doesn't have one with this name.
+
+` + modesHelp() + `
+Legacy aliases (deprecated, still functional):
+  -tashkeel   = -mode tashkeel
+  -notones    = -mode atonal
+  -phonetic   = -mode phonetic
 
 If words are passed as arguments, each is transliterated on its own
 output line. With no arguments, lines are read from stdin.
 `
+}

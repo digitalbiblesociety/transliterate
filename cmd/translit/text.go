@@ -7,27 +7,30 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/digitalbiblesociety/transliterate/script"
 )
 
 func runText(args []string) {
 	fs := flag.NewFlagSet("translit", flag.ExitOnError)
 	scriptName := fs.String("script", "", "force a specific script (ISO 15924; default: auto-detect)")
-	tashkeel := fs.Bool("tashkeel", false, "for Arab input, use the tashkeel-aware engine (no-op for other scripts)")
-	notones := fs.Bool("notones", false, "for Hani/Yueh input, strip tone marks (Mandarin) or tone digits (Cantonese)")
-	fs.Usage = func() { fmt.Fprint(os.Stderr, textHelp) }
+	mf := registerModeFlags(fs)
+	fs.Usage = func() { fmt.Fprint(os.Stderr, textHelp()) }
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)
 	}
+	mf.validate()
 
-	var forced *engine
+	var forced *script.Engine
 	if *scriptName != "" {
-		forced = engineByName(*scriptName)
+		forced = script.ByName(*scriptName)
 		if forced == nil {
-			fmt.Fprintf(os.Stderr, "unknown script %q\nvalid: %s\n", *scriptName, strings.Join(engineNames(), ", "))
+			fmt.Fprintf(os.Stderr, "unknown script %q\nvalid: %s\n", *scriptName, strings.Join(script.Names(), ", "))
 			os.Exit(2)
 		}
 	}
 
+	mode := mf.effective()
 	w := bufio.NewWriter(os.Stdout)
 	defer w.Flush()
 
@@ -39,20 +42,13 @@ func runText(args []string) {
 		}
 		eng := forced
 		if eng == nil {
-			eng = detect(in)
+			eng = script.Detect(in)
 		}
 		if eng == nil {
 			fmt.Fprintln(w, in)
 			return
 		}
-		fn := eng.transliterate
-		if *tashkeel && eng.tashkeel != nil {
-			fn = eng.tashkeel
-		}
-		if *notones && eng.atonal != nil {
-			fn = eng.atonal
-		}
-		fmt.Fprintln(w, fn(in))
+		fmt.Fprintln(w, script.ResolveMode(eng, mode)(in))
 	}
 
 	if fs.NArg() > 0 {
