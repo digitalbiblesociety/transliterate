@@ -137,16 +137,32 @@ var toneMarks = map[rune]bool{
 // ignored is dropped on sight in the main loop. Includes tone marks plus
 // maitaikhu (the vowel shortener — pattern detection handles it
 // explicitly, so when it shows up here it had no pattern context) and
-// other formatting marks.
+// other formatting marks. Native pause markers (ฯ ๏ ๚ ๛) are NOT in
+// this set — they map to Western punctuation via pauseMarkers so the
+// downstream alignment tooling (e.g. Aeneas) sees explicit phrase
+// boundaries.
 var ignored = map[rune]bool{
 	0x0E3A: true, // phinthu
 	0x0E47: true, // maitaikhu (pattern-detected as part of เC็ short e)
 	0x0E48: true, 0x0E49: true, 0x0E4A: true, 0x0E4B: true, // tone marks
 	0x0E4D: true, // niggahita
 	0x0E4E: true, // yamakkan
-	0x0E4F: true, // fongman
-	0x0E5A: true, // angkhankhu
-	0x0E5B: true, // khomut
+}
+
+// pauseMarkers maps Thai punctuation that signals an audible pause to
+// the Western punctuation of equivalent strength. The mapping intent:
+//
+//	ฯ paiyannoi → ","  medium pause / abbreviation / soft sentence end
+//	๏ fongman   → "."  section/paragraph opener (boundary precedes it)
+//	๚ angkhankhu → "." strong: end of stanza or chapter
+//	๛ khomut    → "."  very strong: end of text / chapter
+//
+// Aeneas (and other forced aligners) consume these as fragment splits.
+var pauseMarkers = map[rune]string{
+	0x0E2F: ",", // ฯ
+	0x0E4F: ".", // ๏
+	0x0E5A: ".", // ๚
+	0x0E5B: ".", // ๛
 }
 
 // Transliterate returns the RTGS romanization of s. Non-Thai runes pass
@@ -223,6 +239,10 @@ func Transliterate(s string) string {
 			continue
 		}
 		if v, ok := vowelSigns[r]; ok {
+			b.WriteString(v)
+			continue
+		}
+		if v, ok := pauseMarkers[r]; ok {
 			b.WriteString(v)
 			continue
 		}
@@ -304,6 +324,54 @@ func Contains(s string) bool {
 		if r >= BlockStart && r <= BlockEnd {
 			return true
 		}
+	}
+	return false
+}
+
+// SplitPhrases breaks s into phrase-level fragments suitable for forced
+// alignment (e.g. with Aeneas — https://github.com/readbeyond/aeneas).
+// Thai script doesn't use spaces between words, so word-level segmentation
+// would require a dictionary; but phrase boundaries are signalled by
+// structural markers that ARE present in well-edited text:
+//
+//   - Unicode whitespace (Thai writers insert spaces at phrase breaks)
+//   - Thai native pause marks: ฯ ๏ ๚ ๛
+//   - Western sentence/clause terminators: . , ; : ! ?
+//
+// The boundary characters themselves are not included in any fragment.
+// Empty fragments are dropped. Word segmentation is not attempted.
+func SplitPhrases(s string) []string {
+	var out []string
+	var b strings.Builder
+	flush := func() {
+		if b.Len() == 0 {
+			return
+		}
+		frag := strings.TrimSpace(b.String())
+		if frag != "" {
+			out = append(out, frag)
+		}
+		b.Reset()
+	}
+	for _, r := range s {
+		if isPhraseBoundary(r) {
+			flush()
+			continue
+		}
+		b.WriteRune(r)
+	}
+	flush()
+	return out
+}
+
+func isPhraseBoundary(r rune) bool {
+	switch r {
+	case ' ', '\t', '\n', '\r', '\v', '\f', '\u00A0', '\u2028', '\u2029':
+		return true
+	case 0x0E2F, 0x0E4F, 0x0E5A, 0x0E5B: // ฯ ๏ ๚ ๛
+		return true
+	case '.', ',', ';', ':', '!', '?':
+		return true
 	}
 	return false
 }

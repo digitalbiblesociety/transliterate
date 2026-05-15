@@ -66,6 +66,55 @@ func TestDigits(t *testing.T) {
 	}
 }
 
+func TestPauseMarkers(t *testing.T) {
+	// Thai pause markers should emit Western punctuation of equivalent
+	// strength so that Aeneas-style aligners see explicit phrase splits.
+	cases := map[string]string{
+		"กาฯ":   "ka,", // ฯ paiyannoi → medium pause
+		"กา๏":   "ka.", // ๏ fongman → strong
+		"กา๚":   "ka.", // ๚ angkhankhu → strong
+		"กา๛":   "ka.", // ๛ khomut → very strong
+		"กา ขา": "ka kha", // whitespace passes through (still a phrase boundary)
+	}
+	for in, want := range cases {
+		if got := Transliterate(in); got != want {
+			t.Errorf("Transliterate(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestSplitPhrases(t *testing.T) {
+	cases := []struct {
+		in   string
+		want []string
+	}{
+		// Splits on whitespace and on Thai native pause marks.
+		{"ไทย แมว", []string{"ไทย", "แมว"}},
+		{"กา๚ ขา๛", []string{"กา", "ขา"}},
+		{"กา. ขา?", []string{"กา", "ขา"}},
+		// Empty input.
+		{"", nil},
+		// All boundaries → no fragments.
+		{" . , ", nil},
+		// Single fragment with no boundaries.
+		{"ไทย", []string{"ไทย"}},
+		// Mixed boundaries collapse runs of whitespace.
+		{"ก ข\n\tค", []string{"ก", "ข", "ค"}},
+	}
+	for _, tc := range cases {
+		got := SplitPhrases(tc.in)
+		if len(got) != len(tc.want) {
+			t.Errorf("SplitPhrases(%q) = %q, want %q", tc.in, got, tc.want)
+			continue
+		}
+		for i := range got {
+			if got[i] != tc.want[i] {
+				t.Errorf("SplitPhrases(%q)[%d] = %q, want %q", tc.in, i, got[i], tc.want[i])
+			}
+		}
+	}
+}
+
 func TestPassthrough(t *testing.T) {
 	for _, s := range []string{"\\v 1 In the beginning", "Hello", "1:1"} {
 		if got := Transliterate(s); got != s {
