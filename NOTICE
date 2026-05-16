@@ -16,19 +16,61 @@ train/dev/test splits of the ANETAC corpus (~80k Arabic named entities paired
 with their English transliterations).
 
 --------------------------------------------------------------------------------
-Unicode Unihan Database — Mandarin and Cantonese readings
+Unicode Unihan Database — Cantonese readings
 --------------------------------------------------------------------------------
-Files:    languages/hani/table.go, languages/yueh/table.go (generated)
+Files:    languages/yueh/table.go (generated)
 Source:   https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip
 License:  Unicode Terms of Use (https://www.unicode.org/copyright.html)
 
-The Hanyu Pinyin (Mandarin, tone-marked) and Jyutping (Cantonese, tone-digit)
-reading tables for the CJK Unified Ideographs block (U+4E00..U+9FFF) are
-generated from the kMandarin and kCantonese fields of the Unicode Unihan
-Database, respectively. One primary reading per character.
+The Jyutping (Cantonese, tone-digit) reading table for the CJK Unified
+Ideographs block (U+4E00..U+9FFF) is generated from the kCantonese field of
+the Unicode Unihan Database. One primary reading per character.
 
 The generator script is at internal/cmd/gen-unihan; it parses the
 Unihan_Readings.txt file from the latest Unicode release.
+
+Mandarin readings used to come from the same generator (kMandarin field).
+They are now sourced from the vendored mozillazg/go-pinyin (per-character)
+and mozillazg/phrase-pinyin-data (phrase-aware) tables — see the next
+two attributions and internal/pinyin/NOTICE.
+
+--------------------------------------------------------------------------------
+go-pinyin + phrase-pinyin-data — Mandarin pinyin
+--------------------------------------------------------------------------------
+Files:    internal/pinyin/ (entire subtree)
+Source:   https://github.com/mozillazg/go-pinyin
+          https://github.com/mozillazg/phrase-pinyin-data
+License:  MIT (both projects)
+
+mozillazg/go-pinyin's source files are vendored under internal/pinyin
+with no import-path rewriting (the package's exports work unmodified at
+the new path). The phrase dictionary (pinyin.txt and overwrite.txt from
+phrase-pinyin-data) is embedded under internal/pinyin/data and parsed
+once at first use. languages/hani performs longest-match phrase lookup
+against this dictionary before falling back to go-pinyin's per-character
+table — this is what disambiguates polyphones such as 中 (zhōng / zhòng)
+and 行 (xíng / háng) based on context.
+
+See internal/pinyin/NOTICE for the full attribution and a list of files
+that were not vendored.
+
+--------------------------------------------------------------------------------
+kagome — Japanese morphological analyzer
+--------------------------------------------------------------------------------
+Files:    internal/kagome/ (entire subtree)
+Source:   https://github.com/ikawaha/kagome (v2)
+          https://github.com/ikawaha/kagome-dict
+License:  MIT
+
+Source files from kagome and kagome-dict are vendored under internal/kagome
+with import paths rewritten to point inside this module. The bundled
+ipa.dict is the IPA dictionary derived from mecab-ipadic-2.7.0-20070801
+(NAIST / ICOT Free Software terms). See internal/kagome/NOTICE for the
+detailed attribution and full upstream license text.
+
+The Japanese transliterator at languages/jpan uses kagome to obtain a
+kana reading for kanji-bearing tokens before running the existing Hepburn
+mapper over the reading.
 
 --------------------------------------------------------------------------------
 Aksharamukha — Indic script codepoint mappings

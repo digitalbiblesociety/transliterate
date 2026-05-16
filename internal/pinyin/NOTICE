@@ -1,0 +1,51 @@
+internal/pinyin
+================
+
+This directory bundles two upstream projects so the build is hermetic
+and has no Go module dependency on either:
+
+--------------------------------------------------------------------------------
+go-pinyin — Hanzi to pinyin converter
+--------------------------------------------------------------------------------
+Files:    pinyin.go, phonetic_symbol.go, pinyin_dict.go, doc.go
+Source:   https://github.com/mozillazg/go-pinyin
+Copyright (c) 2016 mozillazg, 闲耘
+License:  MIT (see ./LICENSE)
+
+The source files were copied without modification. The original
+PinyinDict (per-character Unihan-derived readings, comma-separated when a
+character has more than one) is intact. We added one file of our own,
+phrases.go, which is described below.
+
+CLI tooling (cli/), tools (_tools/), tests, examples, and benchmarks
+were not vendored.
+
+--------------------------------------------------------------------------------
+phrase-pinyin-data — Chinese phrase → pinyin dictionary
+--------------------------------------------------------------------------------
+Files:    data/pinyin.txt, data/overwrite.txt (+ LICENSE, README.md)
+Source:   https://github.com/mozillazg/phrase-pinyin-data
+Copyright (c) 2017 mozillazg
+License:  MIT (see ./data/LICENSE)
+
+pinyin.txt is the curated primary dictionary (~47k entries); overwrite.txt
+contains ~900 manual corrections that supersede pinyin.txt at load time.
+Both files use the format `<phrase>: <pinyin syllables>`, one entry per
+line, comments prefixed with `#`. They are embedded into the binary via
+`go:embed` in phrases.go and parsed once on first use.
+
+The other dictionaries shipped by phrase-pinyin-data upstream
+(cc_cedict.txt, large_pinyin.txt, zdic_*.txt, di.txt) are not vendored —
+they would inflate the binary by ~20MB for marginal coverage gain.
+
+--------------------------------------------------------------------------------
+Original code in this directory
+--------------------------------------------------------------------------------
+File:     phrases.go
+Author:   Digital Bible Society / transliterate contributors
+License:  MIT (same as the rest of this project)
+
+This file glues the two upstream sources together: it loads the embedded
+phrase data and exposes LookupPhrase / MaxPhraseRunes, which the
+languages/hani package uses to perform longest-match polyphone
+disambiguation before falling back to go-pinyin's per-character lookup.
