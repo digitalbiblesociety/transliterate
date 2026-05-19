@@ -210,6 +210,12 @@ func init() {
 	RegisterMode("Tibt", "phonetic",
 		"Tibetan: THL Simplified Phonetic (approximate Lhasa pronunciation) instead of the default Wylie.",
 		tibt.TransliteratePhonetic)
+	RegisterMode("Mymr", "ipa",
+		"Burmese: IPA phonemic transcription with tone diacritics instead of the default MLCTS2.",
+		mymr.TransliterateIPA)
+	RegisterMode("Mymr", "mlcts",
+		"Burmese: orthographic MLCTS (aspirated 'h' before letter, historic 'r' for ya yit) instead of the default MLCTS2.",
+		mymr.TransliterateMLCTS)
 }
 
 // ByName returns the engine whose Name matches the given ISO 15924

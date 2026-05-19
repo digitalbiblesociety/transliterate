@@ -107,6 +107,18 @@ dropping. No PyThaiNLP source code is bundled — the algorithm is
 re-implemented in Go.
 
 --------------------------------------------------------------------------------
+Lao — BGN/PCGN romanization algorithm
+--------------------------------------------------------------------------------
+Files:    languages/laoo/lao.go
+Source:   BGN/PCGN 1966 Lao romanization (public standard document)
+          https://github.com/wannaphong/LaoNLP (Apache 2.0)
+License:  see below
+
+The Lao transliterator at languages/laoo implements the BGN/PCGN 1966
+standard — a public document from the U.S. Board on Geographic Names
+and the U.K. Permanent Committee on Geographical Names.
+
+--------------------------------------------------------------------------------
 Unicode character names
 --------------------------------------------------------------------------------
 Files:    languages/cans/table.go, languages/cher/table.go

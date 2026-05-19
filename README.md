@@ -2,7 +2,9 @@
 
 ![transliterate](./assets/transliterate-logo.svg)
 
-Pure-Go transliteration of 30+ writing systems to the Latin alphabet, built for Bible-translation workflows utilizing the [USFM format](https://ubsicap.github.io/usfm/about/index.html) and the [Aeneas Project](https://github.com/readbeyond/aeneas) like [Scripture App Builder](https://software.sil.org/scriptureappbuilder/). But usable for any text-processing pipeline.
+Pure-Go transliteration of 30+ writing systems to the Latin alphabet, built for Bible-translation workflows utilizing the [USFM format](https://ubsicap.github.io/usfm/about/index.html) and the [Dido Project](https://github.com/digitalbiblesociety/dido) like [inScript](https://github.com/digitalbiblesociety/browserbible-4) and [Scripture App Builder](https://software.sil.org/scriptureappbuilder/).
+
+The initial focus is providing text for automatic segmentation of audio rather than for maximum intelligibility.
 
 To request an additional language, offer transliteration corrections/preferences, please create an [issue](https://github.com/digitalbiblesociety/transliterate/issues).
 
@@ -129,19 +131,16 @@ Run `translit help` (or `translit help <subcommand>`) for the full flag list.
 Third-party data and algorithms in this repo:
 - **ANETAC** (MIT) — Arabic named-entity dictionary.
 - **Unicode Unihan Database** (Unicode Terms of Use) — Cantonese
-  Jyutping readings (Mandarin moved to go-pinyin, see below).
+  Jyutping readings _(Mandarin moved to go-pinyin, see below)_.
 - **Unicode character names** (Unicode Terms of Use) — Cansyl and
   Cherokee tables.
 - **PyThaiNLP** (Apache 2.0) — algorithmic basis for the Thai RTGS
   port; no source code is bundled.
-- **Aksharamukha** (MIT) — codepoint romanization tables for Brahmi,
+- **Aksharamukha** - codepoint romanization tables for Brahmi,
   Sharada, Modi, Tirhuta, Newa, and Tai Tham.
 - **kagome** + **kagome-dict** (MIT) — Japanese morphological analyzer
-  and IPA dictionary. Vendored under `internal/kagome/` rather than
-  pulled via `go.mod` so the build has no external Go module
-  dependencies; bundled `ipa.dict` is from mecab-ipadic-2.7.0-20070801
-  (NAIST/ICOT terms).
-- **go-pinyin** + **phrase-pinyin-data** (both MIT) — Mandarin per-
+  and IPA dictionary. Vendored under `internal/kagome/`.
+- **go-pinyin** + **phrase-pinyin-data** — Mandarin per-
   character readings and ~47k phrase dictionary for polyphone
   disambiguation (中 reads zhōng in 中国 but zhòng in 击中). Vendored
   under `internal/pinyin/`.
@@ -153,8 +152,7 @@ All other script tables are based on public international standards
 
 > Note on vendoring: we keep large third-party Go projects in-tree under
 > `internal/` (rather than as `go.mod` dependencies) to keep the build
-> hermetic and to reduce the supply-chain surface — `go build` should not
-> need to pull anything from the module proxy at compile time.
+> hermetic.
 
 ## License
 
